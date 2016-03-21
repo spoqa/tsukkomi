@@ -29,10 +29,8 @@ install_requires = [
 ]
 tests_require = [
     'pytest >= 2.9.0',
-]
-extras_require = [
     'import-order',
-    'flake8'
+    'flake8',
 ]
 
 
@@ -49,7 +47,6 @@ setup(
     install_requires=install_requires,
     extras_require={
         'tests': tests_require,
-        'extras': extras_require
     },
     classifiers=[
         'Development Status :: 3 - Alpha',
