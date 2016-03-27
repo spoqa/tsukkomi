@@ -4,10 +4,13 @@
 """
 import functools
 import inspect
+import itertools
 import typing
 
-__all__ = ('check_arguments', 'check_callable', 'check_return', 'check_type',
-           'typechecked', )
+__all__ = (
+    'check_arguments', 'check_callable', 'check_return', 'check_tuple',
+    'check_type', 'check_union', 'typechecked',
+)
 
 
 T = typing.TypeVar('T')
@@ -20,8 +23,22 @@ def check_type(value: typing.Any, hint: type) -> bool:
     :param hint: assumed type of given ``value``
 
     """
-    if type(hint) is typing.CallableMeta:
+    if hint is typing.Any:
+        actual_type = type(value)
+        correct = True
+    elif hint is typing.Pattern or hint is typing.Match:
+        actual_type = type(value)
+        correct = isinstance(value, hint.impl_type)
+    elif isinstance(hint, typing.TypeVar):
+        # TODO: Check generic
+        correct = True
+        actual_type = type(value)
+    elif issubclass(hint, typing.Callable):
         actual_type, correct = check_callable(value, hint)
+    elif issubclass(hint, typing.Tuple):
+        actual_type, correct = check_tuple(value, hint)
+    elif issubclass(hint, typing.Union):
+        actual_type, correct = check_union(value, hint)
     else:
         correct = isinstance(value, hint)
         actual_type = type(value)
@@ -39,7 +56,9 @@ def check_return(callable_name: str, r: typing.Any,
 
     """
     correct = True
-    _, checks = check_type(r, hints['return'])
+    if 'return' not in hints:
+        return
+    _, correct = check_type(r, hints['return'])
     if not correct:
         raise TypeError(
             'Incorrect return type `{}`, expected {}. for: {}'.format(
@@ -60,9 +79,56 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     hints = typing.get_type_hints(callable_)
     return_type = hints.pop('return', type(None))
     signature = inspect.signature(callable_)
-    arg_types = (param.annotation for _, param in signature.parameters.items())
+    arg_types = tuple(
+        param.annotation
+        for _, param in signature.parameters.items()
+    )
     correct = hint.__args__ == arg_types and hint.__result__ == return_type
     return typing.Callable[list(arg_types), return_type], correct
+
+
+def check_tuple(data: typing.Tuple, hint: type) -> bool:
+    """Check argument type & return type of :class:`typing.Tuple`. since it
+    raises check :class:`typing.Tuple` using `isinstance`, so compare in
+    diffrent way
+
+    :param data: tuple given as a argument
+    :param hint: assumed type of given ``data``
+
+    """
+    tuple_param = hint.__tuple_params__
+    if len(data) != len(tuple_param):
+        raise TypeError('expected tuple size is {},'
+                        'found: {}'.format(len(tuple_param), len(data)))
+    zipped = itertools.zip_longest(data, tuple_param)
+    for i, (v, t) in enumerate(zipped):
+        _, correct = check_type(v, t)
+        if not correct:
+            raise TypeError(
+                '{0}th item `{1}` in tuple must be {2!r}, not: {3!r}'.format(
+                    i, v, t, v
+                )
+            )
+    return hint, True
+
+
+def check_union(data: typing.Union, hint: type) -> bool:
+    """Check argument type & return type of :class:`typing.Union`. since it
+    raises check :class:`typing.Union` using `isinstance`, so compare in
+    diffrent way
+
+    :param data: union given as a argument
+    :param hint: assumed type of given ``data``
+
+    """
+    r = any(c for _, c in [check_type(data, t) for t in hint.__union_params__])
+    if not r:
+        raise TypeError(
+            'expected one of {0!r}, found: {1!r}'.format(
+                hint.__union_params__, type(data)
+            )
+        )
+    return hint, r
 
 
 def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
@@ -90,7 +156,7 @@ def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
             )
 
 
-def typechecked(c: typing.Callable[..., T]) -> T:
+def typechecked(call_: typing.Callable[..., T]) -> T:
     """A decorator to make a callable object checks its types
 
     .. code-block:: python
@@ -116,12 +182,12 @@ def typechecked(c: typing.Callable[..., T]) -> T:
     :return:
 
     """
-    @functools.wraps(c)
+    @functools.wraps(call_)
     def decorator(*args, **kwargs):
-        hints = typing.get_type_hints(c)
-        check_arguments(c, hints, *args, **kwargs)
-        result = c(*args, **kwargs)
-        check_return(c.__name__, result, hints)
+        hints = typing.get_type_hints(call_)
+        check_arguments(call_, hints, *args, **kwargs)
+        result = call_(*args, **kwargs)
+        check_return(call_.__name__, result, hints)
         return result
 
     return decorator
