@@ -9,7 +9,7 @@ import typing
 
 __all__ = (
     'check_arguments', 'check_callable', 'check_return', 'check_tuple',
-    'check_type', 'typechecked',
+    'check_type', 'check_union', 'typechecked',
 )
 
 
@@ -23,7 +23,13 @@ def check_type(value: typing.Any, hint: type) -> bool:
     :param hint: assumed type of given ``value``
 
     """
-    if isinstance(hint, typing.TypeVar):
+    if hint is typing.Any:
+        actual_type = type(value)
+        correct = True
+    elif hint is typing.Pattern or hint is typing.Match:
+        actual_type = type(value)
+        correct = isinstance(value, hint.impl_type)
+    elif isinstance(hint, typing.TypeVar):
         # TODO: Check generic
         correct = True
         actual_type = type(value)

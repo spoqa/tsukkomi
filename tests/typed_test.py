@@ -1,4 +1,5 @@
 import typing
+import re
 
 from pytest import raises
 
@@ -261,3 +262,79 @@ def test_union():
     assert check_union(1.2)
     with raises(TypeError):
         assert check_union('ss')
+
+
+@typechecked
+def check_optional(a: typing.Optional[int]) -> typing.Optional[int]:
+    return a
+
+
+def test_optional():
+    assert check_optional(1)
+    assert check_optional(None) is None
+    with raises(TypeError):
+        # typing.Optional[int] == typing.Union[int, None]
+        assert check_optional('ss')
+
+
+@typechecked
+def check_list(a: typing.List) -> typing.List:
+    return a
+
+
+def test_list():
+    assert check_list([1, 2])
+    with raises(TypeError):
+        assert check_list(1)
+
+
+@typechecked
+def check_iterable(a: typing.Iterable) -> typing.Iterable:
+    return a
+
+
+def test_iterable():
+    assert check_iterable([1, 2])
+    assert check_iterable((1, 2))
+    assert check_iterable({1, 2})
+    assert check_iterable(frozenset({1, 2}))
+    assert check_iterable({'a': 2}.items())
+    assert check_iterable({'a': 2}.keys())
+    assert check_iterable({'a': 2}.values())
+    assert check_iterable('abcdef')
+    assert check_iterable(check_generator())
+    with raises(TypeError):
+        assert check_iterable(1)
+
+
+@typechecked
+def check_mapping(a: typing.Mapping) -> typing.Mapping:
+    return a
+
+
+def test_mapping():
+    assert check_mapping({1: 2})
+    with raises(TypeError):
+        assert check_mapping(1)
+
+
+@typechecked
+def check_pattern(a: typing.Pattern) -> typing.Pattern:
+    return a
+
+
+def test_pattern():
+    assert check_pattern(re.compile('[a-z]'))
+    with raises(TypeError):
+        assert check_pattern(1)
+
+
+@typechecked
+def check_match(a: typing.Match) -> typing.Any:
+    return a
+
+
+def test_match():
+    assert check_match(re.match('[a-z]', 'a'))
+    with raises(TypeError):
+        assert check_match(1)
