@@ -37,13 +37,12 @@ def test_return_argument_primitive():
 
 
 @typechecked
-def return_weird2():
+def return_dosent_have_annotation():
     return True
 
 
 def test_return_argument_primitive_dosent_have_return_type():
-    with raises(TypeError):
-        assert return_weird2()
+    assert return_dosent_have_annotation()
 
 
 @typechecked
@@ -59,16 +58,6 @@ def test_check_sequence():
 def test_check_sequence_with_wrong_argument():
     with raises(TypeError):
         assert check_sequence(['a'])
-
-
-@typechecked
-def check_generic(a: Sequence[T]) -> T:
-    return 'a'
-
-
-def test_check_sequence_generic():
-    with raises(TypeError):
-        assert check_sequence([1])
 
 
 def _call() -> str:

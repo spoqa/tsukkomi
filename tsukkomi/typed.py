@@ -39,7 +39,9 @@ def check_return(callable_name: str, r: typing.Any,
 
     """
     correct = True
-    _, checks = check_type(r, hints['return'])
+    if 'return' not in hints:
+        return
+    _, correct = check_type(r, hints['return'])
     if not correct:
         raise TypeError(
             'Incorrect return type `{}`, expected {}. for: {}'.format(
@@ -60,7 +62,10 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     hints = typing.get_type_hints(callable_)
     return_type = hints.pop('return', type(None))
     signature = inspect.signature(callable_)
-    arg_types = (param.annotation for _, param in signature.parameters.items())
+    arg_types = tuple(
+        param.annotation
+        for _, param in signature.parameters.items()
+    )
     correct = hint.__args__ == arg_types and hint.__result__ == return_type
     return typing.Callable[list(arg_types), return_type], correct
 
@@ -90,7 +95,7 @@ def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
             )
 
 
-def typechecked(c: typing.Callable[..., T]) -> T:
+def typechecked(call_: typing.Callable[..., T]) -> T:
     """A decorator to make a callable object checks its types
 
     .. code-block:: python
@@ -116,12 +121,12 @@ def typechecked(c: typing.Callable[..., T]) -> T:
     :return:
 
     """
-    @functools.wraps(c)
+    @functools.wraps(call_)
     def decorator(*args, **kwargs):
-        hints = typing.get_type_hints(c)
-        check_arguments(c, hints, *args, **kwargs)
-        result = c(*args, **kwargs)
-        check_return(c.__name__, result, hints)
+        hints = typing.get_type_hints(call_)
+        check_arguments(call_, hints, *args, **kwargs)
+        result = call_(*args, **kwargs)
+        check_return(call_.__name__, result, hints)
         return result
 
     return decorator
