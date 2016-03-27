@@ -31,6 +31,8 @@ def check_type(value: typing.Any, hint: type) -> bool:
         actual_type, correct = check_callable(value, hint)
     elif issubclass(hint, typing.Tuple):
         actual_type, correct = check_tuple(value, hint)
+    elif issubclass(hint, typing.Union):
+        actual_type, correct = check_union(value, hint)
     else:
         correct = isinstance(value, hint)
         actual_type = type(value)
@@ -102,6 +104,25 @@ def check_tuple(data: typing.Tuple, hint: type) -> bool:
                 )
             )
     return hint, True
+
+
+def check_union(data: typing.Union, hint: type) -> bool:
+    """Check argument type & return type of :class:`typing.Union`. since it
+    raises check :class:`typing.Union` using `isinstance`, so compare in
+    diffrent way
+
+    :param data: union given as a argument
+    :param hint: assumed type of given ``data``
+
+    """
+    r = any(c for _, c in [check_type(data, t) for t in hint.__union_params__])
+    if not r:
+        raise TypeError(
+            'expected one of {0!r}, found: {1!r}'.format(
+                hint.__union_params__, type(data)
+            )
+        )
+    return hint, r
 
 
 def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],

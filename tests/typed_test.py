@@ -95,7 +95,9 @@ def x(a: float) -> float:
 
 
 @typechecked
-def check_callable3(f: typing.Callable[[typing.Callable[[float], float]], bool]) -> str:
+def check_callable3(
+    f: typing.Callable[[typing.Callable[[float], float]], bool]
+) -> str:
     return 'o' if f(x) else 'x'
 
 
@@ -247,3 +249,15 @@ def test_typing_tuple():
     assert check_tuple((1, 2))
     with raises(TypeError):
         assert check_tuple(1)
+
+
+@typechecked
+def check_union(a: typing.Union[int, float]) -> typing.Union[int, float]:
+    return a
+
+
+def test_union():
+    assert check_union(1)
+    assert check_union(1.2)
+    with raises(TypeError):
+        assert check_union('ss')
