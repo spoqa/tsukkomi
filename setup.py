@@ -32,6 +32,9 @@ tests_require = [
     'import-order',
     'flake8',
 ]
+docs_require = [
+    'Sphinx',
+]
 
 
 setup(
@@ -39,14 +42,15 @@ setup(
     version=get_version(),
     description='make tsukkomi for python types',
     long_description=readme(),
-    url='',
+    url='http://github.com/spoqa/tsukkomi',
     author='Kang Hyojun',
-    author_email='iam.kanghyojun' '@' 'gmail.com',
+    author_email='ed' '@' 'spoqa.com',
     license='Public Domain',
     packages=find_packages(exclude=['tests']),
     install_requires=install_requires,
     extras_require={
         'tests': tests_require,
+        'docs': docs_require,
     },
     classifiers=[
         'Development Status :: 3 - Alpha',
