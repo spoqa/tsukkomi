@@ -4,10 +4,13 @@
 """
 import functools
 import inspect
+import itertools
 import typing
 
-__all__ = ('check_arguments', 'check_callable', 'check_return', 'check_type',
-           'typechecked', )
+__all__ = (
+    'check_arguments', 'check_callable', 'check_return', 'check_tuple',
+    'check_type', 'typechecked',
+)
 
 
 T = typing.TypeVar('T')
@@ -20,8 +23,14 @@ def check_type(value: typing.Any, hint: type) -> bool:
     :param hint: assumed type of given ``value``
 
     """
-    if type(hint) is typing.CallableMeta:
+    if isinstance(hint, typing.TypeVar):
+        # TODO: Check generic
+        correct = True
+        actual_type = type(value)
+    elif issubclass(hint, typing.Callable):
         actual_type, correct = check_callable(value, hint)
+    elif issubclass(hint, typing.Tuple):
+        actual_type, correct = check_tuple(value, hint)
     else:
         correct = isinstance(value, hint)
         actual_type = type(value)
@@ -68,6 +77,31 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     )
     correct = hint.__args__ == arg_types and hint.__result__ == return_type
     return typing.Callable[list(arg_types), return_type], correct
+
+
+def check_tuple(data: typing.Tuple, hint: type) -> bool:
+    """Check argument type & return type of :class:`typing.Tuple`. since it
+    raises check :class:`typing.Tuple` using `isinstance`, so compare in
+    diffrent way
+
+    :param data: tuple given as a argument
+    :param hint: assumed type of given ``data``
+
+    """
+    tuple_param = hint.__tuple_params__
+    if len(data) != len(tuple_param):
+        raise TypeError('expected tuple size is {},'
+                        'found: {}'.format(len(tuple_param), len(data)))
+    zipped = itertools.zip_longest(data, tuple_param)
+    for i, (v, t) in enumerate(zipped):
+        _, correct = check_type(v, t)
+        if not correct:
+            raise TypeError(
+                '{0}th item `{1}` in tuple must be {2!r}, not: {3!r}'.format(
+                    i, v, t, v
+                )
+            )
+    return hint, True
 
 
 def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
