@@ -42,7 +42,7 @@ setup(
     version=get_version(),
     description='make tsukkomi for python types',
     long_description=readme(),
-    url='http://github.com/spoqa/tsukkomi',
+    url='https://github.com/spoqa/tsukkomi',
     author='Kang Hyojun',
     author_email='ed' '@' 'spoqa.com',
     license='Public Domain',
