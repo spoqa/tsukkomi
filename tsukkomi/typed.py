@@ -78,6 +78,8 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     """
     if not callable(callable_):
         return type(callable_), False
+    if callable(callable_) and not hasattr(callable_, '__code__'):
+        return type(callable_), True
     hints = typing.get_type_hints(callable_)
     return_type = hints.pop('return', type(None))
     signature = inspect.signature(callable_)
