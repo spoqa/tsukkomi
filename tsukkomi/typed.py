@@ -123,7 +123,7 @@ def check_union(data: typing.Union, hint: type) -> bool:
     :param hint: assumed type of given ``data``
 
     """
-    r = any(c for _, c in [check_type(data, t) for t in hint.__union_params__])
+    r = any(check_type(data, t)[1] for t in hint.__union_params__)
     if not r:
         raise TypeError(
             'expected one of {0!r}, found: {1!r}'.format(
