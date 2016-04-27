@@ -70,10 +70,24 @@ def check_callable(f: typing.Callable[[], str]) -> str:
     return f()
 
 
+class TestCls(object):
+
+    pass
+
+
+@typechecked
+def check_callable_cls(f: typing.Callable) -> str:
+    assert f()
+    return 'hello world'
+
+
 def test_callable():
     assert check_callable(_call)
     with raises(TypeError):
         check_callable('not callable')
+    with raises(TypeError):
+        check_callable(TestCls)
+    check_callable_cls(TestCls)
 
 
 def _call2(x: str, y: int) -> bool:
