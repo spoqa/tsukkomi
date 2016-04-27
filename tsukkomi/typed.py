@@ -76,6 +76,8 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     :param hint: assumed type of given ``callable_``
 
     """
+    if not callable(callable_):
+        return type(callable_), False
     hints = typing.get_type_hints(callable_)
     return_type = hints.pop('return', type(None))
     signature = inspect.signature(callable_)

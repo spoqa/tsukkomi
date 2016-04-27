@@ -72,6 +72,8 @@ def check_callable(f: typing.Callable[[], str]) -> str:
 
 def test_callable():
     assert check_callable(_call)
+    with raises(TypeError):
+        check_callable('not callable')
 
 
 def _call2(x: str, y: int) -> bool:
