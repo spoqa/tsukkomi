@@ -76,6 +76,8 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     :param hint: assumed type of given ``callable_``
 
     """
+    if not callable(callable_):
+        return type(callable_), False
     hints = typing.get_type_hints(callable_)
     return_type = hints.pop('return', type(None))
     signature = inspect.signature(callable_)
@@ -121,7 +123,7 @@ def check_union(data: typing.Union, hint: type) -> bool:
     :param hint: assumed type of given ``data``
 
     """
-    r = any(c for _, c in [check_type(data, t) for t in hint.__union_params__])
+    r = any(check_type(data, t)[1] for t in hint.__union_params__)
     if not r:
         raise TypeError(
             'expected one of {0!r}, found: {1!r}'.format(
