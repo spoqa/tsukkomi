@@ -1,4 +1,6 @@
 import ast
+import sys
+
 from setuptools import find_packages, setup
 
 
@@ -27,6 +29,12 @@ def get_version():
 install_requires = [
     'setuptools',
 ]
+below35_requires = [
+    'typing',
+]
+if 'bdist_wheel' not in sys.argv and sys.version_info < (3, 5):
+    install_requires.extend(below35_requires)
+
 tests_require = [
     'pytest >= 2.9.0',
     'import-order',
@@ -49,6 +57,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     install_requires=install_requires,
     extras_require={
+        ":python_version<'3.5'": below35_requires,
         'tests': tests_require,
         'docs': docs_require,
     },
