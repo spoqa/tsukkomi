@@ -122,6 +122,21 @@ def test_callable_has_callable_argument():
     assert check_callable3(_call3)
 
 
+@typechecked
+def check_callable4(f: typing.Callable) -> str:
+    return 'o' if f(x) else 'x'
+
+
+@typechecked
+def check_callable5(f: typing.Callable[..., typing.Any]) -> str:
+    return 'o' if f(x) else 'x'
+
+
+def test_callable_without_any_filters():
+    assert check_callable4(lambda x: True) == 'o'
+    assert check_callable5(lambda x: False) == 'x'
+
+
 class Human(object):
 
     @typechecked
