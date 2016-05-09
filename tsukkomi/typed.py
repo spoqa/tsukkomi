@@ -87,7 +87,17 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
         param.annotation
         for _, param in signature.parameters.items()
     )
-    correct = hint.__args__ == arg_types and hint.__result__ == return_type
+    correct = all({
+        any({
+            hint.__args__ is None,
+            hint.__args__ is Ellipsis,
+            hint.__args__ == arg_types,
+        }),
+        any({
+            hint.__result__ is None,
+            hint.__result__ in (typing.Any, return_type)
+        })
+    })
     return typing.Callable[list(arg_types), return_type], correct
 
 
