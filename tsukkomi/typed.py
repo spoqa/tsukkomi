@@ -5,6 +5,7 @@
 import functools
 import inspect
 import itertools
+import types
 import typing
 
 __all__ = (
@@ -14,25 +15,31 @@ __all__ = (
 
 
 T = typing.TypeVar('T')
+NoneType = type(None)
 
 
-def check_type(value: typing.Any, hint: type) -> bool:
+def check_type(value: typing.Any, hint: typing.Optional[type]) -> bool:
     """Check given ``value``'s type.
 
     :param value: given argument
-    :param hint: assumed type of given ``value``
+    :param hint: expected type of given ``value``.
+                 as like :mod:`typing` interprets, :const:`None` is interpreted
+                 as :class:`types.NoneType`
+    :type hint: :class:`typing.Optional`[:class:`type`]
 
     """
-    if hint is typing.Any:
-        actual_type = type(value)
+    if hint is None:
+        hint = NoneType
+    actual_type = type(value)
+    if hint is NoneType:
+        correct = value is None
+    elif hint is typing.Any:
         correct = True
     elif hint is typing.Pattern or hint is typing.Match:
-        actual_type = type(value)
         correct = isinstance(value, hint.impl_type)
     elif isinstance(hint, typing.TypeVar):
         # TODO: Check generic
         correct = True
-        actual_type = type(value)
     elif issubclass(hint, typing.Callable):
         actual_type, correct = check_callable(value, hint)
     elif issubclass(hint, typing.Tuple):
@@ -41,7 +48,6 @@ def check_type(value: typing.Any, hint: type) -> bool:
         actual_type, correct = check_union(value, hint)
     else:
         correct = isinstance(value, hint)
-        actual_type = type(value)
     return actual_type, correct
 
 
@@ -145,7 +151,8 @@ def check_union(data: typing.Union, hint: type) -> bool:
     return hint, r
 
 
-def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
+def check_arguments(c: typing.Callable,
+                    hints: typing.Mapping[str, typing.Optional[type]],
                     *args, **kwargs) -> None:
     """Check arguments type, raise :class:`TypeError` if argument type is not
     expected type.
@@ -158,8 +165,9 @@ def check_arguments(c: typing.Callable, hints: typing.Mapping[str, type],
     signature = inspect.signature(c)
     bound = signature.bind(*args, **kwargs)
     for argument_name, value in bound.arguments.items():
-        type_hint = hints.get(argument_name)
-        if type_hint is None:
+        try:
+            type_hint = hints[argument_name]
+        except KeyError:
             continue
         actual_type, correct = check_type(value, type_hint)
         if not correct:
