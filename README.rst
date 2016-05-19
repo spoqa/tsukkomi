@@ -82,3 +82,14 @@ following example codes can be passed by `tsukkomi.typed.typechecked`.
 
 
 .. _generic: https://docs.python.org/3/library/typing.html#user-defined-generic-types
+
+Changelogs
+==========
+
+0.0.5 --- 2016-05-19
+--------------------
+
+Modified
+````````
+
+- Interpret None as type(None)
