@@ -369,3 +369,25 @@ def test_match():
     assert check_match(re.match('[a-z]', 'a'))
     with raises(TypeError):
         assert check_match(1)
+
+
+@typechecked
+def check_none_cls(a: type(None)):
+    return a
+
+
+def test_none_cls():
+    assert check_none_cls(None) is None
+    with raises(TypeError):
+        check_none_cls(123)
+
+
+@typechecked
+def check_none(a: None):
+    return a
+
+
+def test_none():
+    assert check_none(None) is None
+    with raises(TypeError):
+        check_none(123)
