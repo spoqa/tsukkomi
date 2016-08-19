@@ -5,7 +5,6 @@
 import functools
 import inspect
 import itertools
-import types
 import typing
 
 __all__ = (
@@ -107,7 +106,8 @@ def check_callable(callable_: typing.Callable, hint: type) -> bool:
     return typing.Callable[list(arg_types), return_type], correct
 
 
-def check_tuple(data: typing.Tuple, hint: type) -> bool:
+def check_tuple(data: typing.Tuple,
+                hint: typing.Union[type, typing.TypingMeta]) -> bool:
     """Check argument type & return type of :class:`typing.Tuple`. since it
     raises check :class:`typing.Tuple` using `isinstance`, so compare in
     diffrent way
@@ -116,10 +116,20 @@ def check_tuple(data: typing.Tuple, hint: type) -> bool:
     :param hint: assumed type of given ``data``
 
     """
+    if not isinstance(data, tuple):
+        raise TypeError(
+            'expected {}, not {}'.format(
+                typing._type_repr(hint),
+                'None' if data is None else '{}: {!r}'.format(
+                    typing._type_repr(type(data)),
+                    data
+                )
+            )
+        )
     tuple_param = hint.__tuple_params__
     if len(data) != len(tuple_param):
-        raise TypeError('expected tuple size is {},'
-                        'found: {}'.format(len(tuple_param), len(data)))
+        raise TypeError('expected tuple size is {}, not {}: '
+                        '{!r}'.format(len(tuple_param), len(data), data))
     zipped = itertools.zip_longest(data, tuple_param)
     for i, (v, t) in enumerate(zipped):
         _, correct = check_type(v, t)
