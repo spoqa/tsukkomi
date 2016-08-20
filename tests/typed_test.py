@@ -279,8 +279,15 @@ def check_tuple(a: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
 
 def test_typing_tuple():
     assert check_tuple((1, 2))
-    with raises(TypeError):
-        assert check_tuple(1)
+    with raises(TypeError) as e:
+        check_tuple(1)
+    assert str(e.value) == 'expected typing.Tuple[int, int], not int: 1'
+    with raises(TypeError) as e:
+        check_tuple(None)
+    assert str(e.value) == 'expected typing.Tuple[int, int], not None'
+    with raises(TypeError) as e:
+        check_tuple(())
+    assert str(e.value) == 'expected tuple size is 2, not 0: ()'
 
 
 @typechecked
