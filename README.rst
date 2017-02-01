@@ -1,9 +1,21 @@
+.. warning::
+
+   **This project is abandoned.**
+
+   We recommend you to use typeguard_ instead.  It has been well maintained,
+   and provides the mostly same API to tsukkomi so that ``typeguard`` module
+   is drop-in replacement of ``tsukkomi.typed`` module.
+
+----
+
 tsukkomi
 ~~~~~~~~
+
 
 do `tsukkomi`_ for python types.
 
 .. _tsukkomi: https://en.wikipedia.org/wiki/Glossary_of_owarai_terms#tsukkomi
+.. _typeguard: https://github.com/agronholm/typeguard
 
 
 What is tsukkomi?
